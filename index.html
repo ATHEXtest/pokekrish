@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,59 +7,79 @@
 <title>Pokémon Explorer</title>
 <style>
   body {
-    font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #ffcb05, #3b4cca);
     margin: 0;
     padding: 0;
+    color: #333;
   }
   header {
-    background-color: #ef5350;
+    background-color: rgba(0,0,0,0.8);
     color: white;
     padding: 1rem;
     text-align: center;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
   #pokemon-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 1rem;
     padding: 1rem;
   }
   .pokemon-card {
-    background-color: white;
-    border-radius: 10px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 15px;
     padding: 1rem;
     text-align: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
   }
   .pokemon-card:hover {
     transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
   }
   #details {
-    padding: 1rem;
-    background-color: white;
+    background: rgba(255,255,255,0.95);
     margin: 1rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  #details img {
+    max-width: 150px;
+    display: block;
+    margin: 0 auto;
   }
   .evolution {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
     margin-top: 1rem;
+    justify-content: center;
   }
-  .evolution img {
+  .evolution-card {
+    background: #fefefe;
+    border-radius: 10px;
+    padding: 0.5rem;
+    text-align: center;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+  }
+  .evolution-card img {
     width: 80px;
     height: 80px;
-    object-fit: contain;
+  }
+  @keyframes fadeIn {
+    from {opacity: 0; transform: translateY(10px);}
+    to {opacity: 1; transform: translateY(0);}
   }
 </style>
 </head>
 <body>
-<header>
-  <h1>Pokémon Explorer</h1>
-</header>
+<header>Pokémon Explorer</header>
 <main>
   <section id="pokemon-list"></section>
   <section id="details"></section>
@@ -70,29 +91,34 @@
   async function fetchPokemonList() {
     const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=50');
     const data = await res.json();
-    data.results.forEach(async (pokemon) => {
+    for (const pokemon of data.results) {
       const pokeData = await fetch(pokemon.url).then(res => res.json());
       renderPokemonCard(pokeData);
-    });
+    }
   }
 
   function renderPokemonCard(poke) {
     const card = document.createElement('div');
     card.classList.add('pokemon-card');
     card.innerHTML = `
-      <img src="${poke.sprites.front_default}" alt="${poke.name}" />
+      <img src="${poke.sprites.other['official-artwork'].front_default}" alt="${poke.name}" />
       <h3>${poke.name.charAt(0).toUpperCase() + poke.name.slice(1)}</h3>
+      <p>${poke.types.map(t => t.type.name).join(', ')}</p>
     `;
     card.addEventListener('click', () => showDetails(poke));
     pokemonListEl.appendChild(card);
   }
 
   async function showDetails(poke) {
+    const abilities = poke.abilities.map(a => a.ability.name).join(', ');
+    const stats = poke.stats.map(s => `${s.stat.name}: ${s.base_stat}`).join('<br>');
     detailsEl.innerHTML = `<h2>${poke.name.charAt(0).toUpperCase() + poke.name.slice(1)}</h2>
-      <img src="${poke.sprites.front_default}" alt="${poke.name}" />
+      <img src="${poke.sprites.other['official-artwork'].front_default}" alt="${poke.name}" />
       <p><strong>Height:</strong> ${poke.height}</p>
       <p><strong>Weight:</strong> ${poke.weight}</p>
       <p><strong>Types:</strong> ${poke.types.map(t => t.type.name).join(', ')}</p>
+      <p><strong>Abilities:</strong> ${abilities}</p>
+      <p><strong>Stats:</strong><br>${stats}</p>
       <h3>Evolution Chain:</h3>
       <div class="evolution" id="evolution-chain"></div>`;
 
@@ -106,17 +132,18 @@
     const evoContainer = document.getElementById('evolution-chain');
     evoContainer.innerHTML = '';
 
-    async function fetchAndRender(name) {
+    async function addEvolution(name) {
       const data = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`).then(res => res.json());
-      const img = document.createElement('img');
-      img.src = data.sprites.front_default;
-      img.title = name;
-      evoContainer.appendChild(img);
+      const evoCard = document.createElement('div');
+      evoCard.classList.add('evolution-card');
+      evoCard.innerHTML = `<img src="${data.sprites.other['official-artwork'].front_default}" alt="${name}" />
+                           <p>${name.charAt(0).toUpperCase() + name.slice(1)}</p>`;
+      evoContainer.appendChild(evoCard);
     }
 
     let current = chain;
     while (current) {
-      await fetchAndRender(current.species.name);
+      await addEvolution(current.species.name);
       current = current.evolves_to[0];
     }
   }
