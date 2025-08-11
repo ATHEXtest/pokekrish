@@ -1,154 +1,397 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pokémon Explorer</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pokédex — First 151</title>
 <style>
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, #ffcb05, #3b4cca);
-    margin: 0;
-    padding: 0;
-    color: #333;
-  }
-  header {
-    background-color: rgba(0,0,0,0.8);
-    color: white;
-    padding: 1rem;
-    text-align: center;
-    font-size: 1.5rem;
-    letter-spacing: 2px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-  }
-  #pokemon-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1rem;
-    padding: 1rem;
-  }
-  .pokemon-card {
-    background: rgba(255,255,255,0.9);
-    border-radius: 15px;
-    padding: 1rem;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .pokemon-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
-  }
-  #details {
-    background: rgba(255,255,255,0.95);
-    margin: 1rem;
-    padding: 1.5rem;
-    border-radius: 15px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.3);
-    animation: fadeIn 0.3s ease-in-out;
-  }
-  #details img {
-    max-width: 150px;
-    display: block;
-    margin: 0 auto;
-  }
-  .evolution {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-top: 1rem;
-    justify-content: center;
-  }
-  .evolution-card {
-    background: #fefefe;
-    border-radius: 10px;
-    padding: 0.5rem;
-    text-align: center;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-  }
-  .evolution-card img {
-    width: 80px;
-    height: 80px;
-  }
-  @keyframes fadeIn {
-    from {opacity: 0; transform: translateY(10px);}
-    to {opacity: 1; transform: translateY(0);}
-  }
+:root{
+  --bg:#07102b; --panel:#0b1220; --muted:#9aa4b2; --accent:#ffd86b; --glass: rgba(255,255,255,0.03);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#07102b,#081426);color:#e6eef6}
+.topbar{display:flex;gap:12px;align-items:center;padding:12px;background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.02)}
+.logo{font-weight:800;font-size:18px;color:var(--accent)}
+.search{flex:1;display:flex;gap:8px;align-items:center}
+.search input{width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+.controls{display:flex;gap:8px;align-items:center}
+.btn{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;cursor:pointer}
+
+/* Layout */
+.app{display:flex;gap:16px;padding:16px;height:calc(100vh - 64px)}
+.list-panel{width:420px;max-width:44%;background:var(--panel);border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);height:100%;overflow:auto}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.card{display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));cursor:pointer;transition:transform .15s, box-shadow .15s}
+.card:hover{transform:translateY(-6px);box-shadow: 0 10px 30px rgba(2,6,23,0.6)}
+.card img{width:72px;height:72px;object-fit:contain}
+.name{font-weight:700}
+.sub{color:var(--muted);font-size:13px}
+
+/* Details */
+.detail-panel{flex:1;background:var(--panel);border-radius:12px;padding:16px;height:100%;overflow:auto;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+.placeholder{opacity:0.8}
+.poke-details{display:block}
+.header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.title h2{margin:0}
+.pnum{opacity:.7}
+.types{display:flex;gap:8px}
+.type-badge{padding:6px 8px;border-radius:999px;font-weight:700;color:#07203a;background:linear-gradient(180deg,rgba(255,255,255,0.06), rgba(255,255,255,0.03))}
+
+/* main content */
+.main{display:flex;gap:18px;margin-top:12px;align-items:flex-start;flex-wrap:wrap}
+.left{width:260px;text-align:center;flex-shrink:0}
+.left img{width:180px;height:180px;object-fit:contain;padding:12px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))}
+.sprites{display:flex;gap:6px;justify-content:center;margin-top:8px}
+.sprites img{width:56px;height:56px;object-fit:contain;border-radius:8px;background:var(--glass);padding:6px}
+.meta p{margin:6px 0}
+.stats{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.stat{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.stat .bar{flex:1;height:10px;background:rgba(255,255,255,0.04);border-radius:999px;overflow:hidden;margin-left:12px}
+.stat .fill{height:100%;border-radius:999px}
+
+/* evolution */
+.evolution{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.evo-card{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px;border-radius:10px;background:rgba(255,255,255,0.02);cursor:pointer;min-width:90px}
+.evo-card img{width:80px;height:80px;object-fit:contain}
+
+/* responsive */
+@media(max-width:900px){
+  .app{flex-direction:column;padding:12px}
+  .list-panel{width:100%;max-width:100%;height:auto;order:1}
+  .detail-panel{width:100%;height:70vh;order:2;transform:translateX(100%);position:fixed;right:0;top:64px;transition:transform .28s;z-index:50}
+  .detail-panel.open{transform:translateX(0)}
+  .grid{grid-template-columns:repeat(3,1fr)}
+}
+
+/* small helpers */
+.progress{display:inline-block;margin-left:6px;color:var(--muted);font-size:13px}
+.loading{opacity:.8;font-size:13px}
+.footer{margin-top:18px;color:var(--muted);font-size:13px}
 </style>
 </head>
 <body>
-<header>Pokémon Explorer</header>
-<main>
-  <section id="pokemon-list"></section>
-  <section id="details"></section>
+<header class="topbar">
+  <div class="logo">Pokédex (1–151)</div>
+  <div class="search">
+    <input id="search" placeholder="Search by name or id (e.g., pikachu or 25)" />
+  </div>
+  <div class="controls">
+    <button id="themeBtn" class="btn" title="Toggle theme">🌙</button>
+    <button id="loadBtn" class="btn">Load 151</button>
+  </div>
+</header>
+
+<main class="app">
+  <aside class="list-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="loading" id="status">Idle</div>
+      <div class="progress" id="progress"></div>
+    </div>
+    <div id="pokemonGrid" class="grid"></div>
+  </aside>
+
+  <section id="detailPanel" class="detail-panel">
+    <div id="placeholder" class="placeholder">
+      <h2>Pick a Pokémon</h2>
+      <p>Click any card on the left to open details. On mobile the panel slides in from the right.</p>
+    </div>
+
+    <div id="pokeDetails" class="poke-details" style="display:none">
+      <div class="header">
+        <div class="title"><h2 id="pname"></h2><div class="pnum" id="pnum"></div></div>
+        <div class="types" id="ptype"></div>
+      </div>
+
+      <div class="main">
+        <div class="left">
+          <img id="pimg" alt="sprite" />
+          <div class="sprites" id="alternateSprites"></div>
+          <div style="margin-top:8px">
+            <button id="playCry" class="btn">🔊 Play cry</button>
+            <label style="margin-left:8px"><input id="autoCry" type="checkbox" /> Auto</label>
+            <button id="closePanel" class="btn" style="margin-left:8px;display:none">← Back</button>
+          </div>
+        </div>
+
+        <div class="right" style="flex:1;min-width:240px">
+          <div class="meta">
+            <p><strong>Height:</strong> <span id="pheight"></span></p>
+            <p><strong>Weight:</strong> <span id="pweight"></span></p>
+            <p><strong>Abilities:</strong> <span id="pabilities"></span></p>
+          </div>
+
+          <h3 style="margin-bottom:6px">Base stats</h3>
+          <div id="stats" class="stats"></div>
+
+          <h3 style="margin-top:12px;margin-bottom:6px">Evolution</h3>
+          <div id="evolution" class="evolution"></div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <small>Data from <a href="https://pokeapi.co/" target="_blank" style="color:var(--muted)">PokeAPI</a> • Cries from Pokemon Showdown when available</small>
+      </div>
+    </div>
+  </section>
 </main>
+
 <script>
-  const pokemonListEl = document.getElementById('pokemon-list');
-  const detailsEl = document.getElementById('details');
+/* Single-file Pokédex (first 151). Copy paste into index.html.
+   Behavior summary:
+   - Click Load 151 to fetch first 151 Pokémon (their details).
+   - Click a card to show details on right (or slide in on mobile).
+   - Evolution chain clickable.
+   - Play cry button fetches audio from Pokemon Showdown; fallback beep if blocked.
+*/
 
-  async function fetchPokemonList() {
-    const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=50');
-    const data = await res.json();
-    for (const pokemon of data.results) {
-      const pokeData = await fetch(pokemon.url).then(res => res.json());
-      renderPokemonCard(pokeData);
+const GRID = document.getElementById('pokemonGrid');
+const STATUS = document.getElementById('status');
+const PROG = document.getElementById('progress');
+const LOADBTN = document.getElementById('loadBtn');
+const SEARCH = document.getElementById('search');
+const DETAIL = document.getElementById('detailPanel');
+const PLACEHOLDER = document.getElementById('placeholder');
+const POKEDETAILS = document.getElementById('pokeDetails');
+const PNAME = document.getElementById('pname');
+const PNUM = document.getElementById('pnum');
+const PIMG = document.getElementById('pimg');
+const PTYPE = document.getElementById('ptype');
+const PALTS = document.getElementById('alternateSprites');
+const PHEIGHT = document.getElementById('pheight');
+const PWEIGHT = document.getElementById('pweight');
+const PABIL = document.getElementById('pabilities');
+const STATS = document.getElementById('stats');
+const EVODIV = document.getElementById('evolution');
+const PLAYCRY = document.getElementById('playCry');
+const AUTOCRY = document.getElementById('autoCry');
+const THEMEBTN = document.getElementById('themeBtn');
+const CLOSEPANEL = document.getElementById('closePanel');
+
+let allPokemon = [];
+let currentPokemon = null;
+
+// Color map for types (for fill bars)
+const typeGrad = {
+  fire: 'linear-gradient(90deg,#ff7a3d,#ff3d3d)',
+  water: 'linear-gradient(90deg,#4da6ff,#1e90ff)',
+  grass: 'linear-gradient(90deg,#6ad98f,#2fb76e)',
+  electric: 'linear-gradient(90deg,#ffd86b,#ffcc00)',
+  psychic: 'linear-gradient(90deg,#ff7bd6,#d96bff)',
+  ice: 'linear-gradient(90deg,#aee9ff,#6fd3ff)',
+  dragon: 'linear-gradient(90deg,#8a7bff,#5a3dff)',
+  dark: 'linear-gradient(90deg,#666b6f,#2b2f34)',
+  fairy: 'linear-gradient(90deg,#ffb6f2,#ff8fe6)',
+  rock: 'linear-gradient(90deg,#d1c19b,#b89b6b)',
+  ground: 'linear-gradient(90deg,#e6c588,#d9a85a)',
+  ghost: 'linear-gradient(90deg,#8f8fbf,#5d5d8a)',
+  steel: 'linear-gradient(90deg,#cfcfd6,#9ea0b5)',
+  normal: 'linear-gradient(90deg,#c9c3b6,#a8a39a)'
+};
+
+function pad(n){ return String(n).padStart(3,'0'); }
+function ucfirst(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+async function loadFirst151(){
+  STATUS.textContent = 'Fetching list...';
+  LOADBTN.disabled = true;
+  try{
+    // get first 151 urls
+    const listRes = await fetch('https://pokeapi.co/api/v2/pokemon?limit=151');
+    const listData = await listRes.json();
+    const urls = listData.results.map(r=> r.url);
+
+    STATUS.textContent = 'Fetching details (this may take ~10–20s)...';
+    PROG.textContent = '0 / 151';
+    // fetch details in small batches to avoid burst
+    const batchSize = 20;
+    for(let i=0;i<urls.length;i+=batchSize){
+      const batch = urls.slice(i,i+batchSize);
+      const promises = batch.map(u => fetch(u).then(r=>r.json()).catch(()=>null));
+      const results = await Promise.all(promises);
+      results.forEach(r => { if(r) allPokemon.push(r); });
+      PROG.textContent = `${allPokemon.length} / 151`;
+      renderGrid();
     }
+    STATUS.textContent = 'Loaded first 151 Pokémon.';
+  }catch(e){
+    console.error(e);
+    STATUS.textContent = 'Failed to load Pokémon.';
+  } finally {
+    LOADBTN.disabled = false;
   }
+}
 
-  function renderPokemonCard(poke) {
+function renderGrid(){
+  const q = SEARCH.value.trim().toLowerCase();
+  GRID.innerHTML = '';
+  const filtered = allPokemon.filter(p=>{
+    if(!p) return false;
+    if(q){
+      if(p.name.includes(q)) return true;
+      if(String(p.id)===q) return true;
+      return false;
+    }
+    return true;
+  });
+  if(filtered.length===0){
+    GRID.innerHTML = '<div style="opacity:.7">No Pokémon found</div>';
+    return;
+  }
+  filtered.forEach(p=>{
     const card = document.createElement('div');
-    card.classList.add('pokemon-card');
-    card.innerHTML = `
-      <img src="${poke.sprites.other['official-artwork'].front_default}" alt="${poke.name}" />
-      <h3>${poke.name.charAt(0).toUpperCase() + poke.name.slice(1)}</h3>
-      <p>${poke.types.map(t => t.type.name).join(', ')}</p>
-    `;
-    card.addEventListener('click', () => showDetails(poke));
-    pokemonListEl.appendChild(card);
+    card.className = 'card';
+    const img = p.sprites.other && p.sprites.other['official-artwork'] && p.sprites.other['official-artwork'].front_default ? p.sprites.other['official-artwork'].front_default : p.sprites.front_default;
+    card.innerHTML = `<img src="${img}" alt="${p.name}" onerror="this.style.opacity=.4">
+      <div><div class="name">${ucfirst(p.name)}</div><div class="sub">#${pad(p.id)} • ${p.types.map(t=>ucfirst(t.type.name)).join(', ')}</div></div>`;
+    card.onclick = ()=> selectPokemon(p);
+    GRID.appendChild(card);
+  });
+}
+
+async function selectPokemon(p){
+  currentPokemon = p;
+  // On mobile, slide panel open
+  if(window.innerWidth <= 900){
+    DETAIL.classList.add('open');
+    CLOSEPANEL.style.display = 'inline-block';
+  } else {
+    CLOSEPANEL.style.display = 'none';
   }
-
-  async function showDetails(poke) {
-    const abilities = poke.abilities.map(a => a.ability.name).join(', ');
-    const stats = poke.stats.map(s => `${s.stat.name}: ${s.base_stat}`).join('<br>');
-    detailsEl.innerHTML = `<h2>${poke.name.charAt(0).toUpperCase() + poke.name.slice(1)}</h2>
-      <img src="${poke.sprites.other['official-artwork'].front_default}" alt="${poke.name}" />
-      <p><strong>Height:</strong> ${poke.height}</p>
-      <p><strong>Weight:</strong> ${poke.weight}</p>
-      <p><strong>Types:</strong> ${poke.types.map(t => t.type.name).join(', ')}</p>
-      <p><strong>Abilities:</strong> ${abilities}</p>
-      <p><strong>Stats:</strong><br>${stats}</p>
-      <h3>Evolution Chain:</h3>
-      <div class="evolution" id="evolution-chain"></div>`;
-
-    const speciesData = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${poke.id}/`).then(res => res.json());
-    const evoChainUrl = speciesData.evolution_chain.url;
-    const evoData = await fetch(evoChainUrl).then(res => res.json());
-    renderEvolution(evoData.chain);
-  }
-
-  async function renderEvolution(chain) {
-    const evoContainer = document.getElementById('evolution-chain');
-    evoContainer.innerHTML = '';
-
-    async function addEvolution(name) {
-      const data = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`).then(res => res.json());
-      const evoCard = document.createElement('div');
-      evoCard.classList.add('evolution-card');
-      evoCard.innerHTML = `<img src="${data.sprites.other['official-artwork'].front_default}" alt="${name}" />
-                           <p>${name.charAt(0).toUpperCase() + name.slice(1)}</p>`;
-      evoContainer.appendChild(evoCard);
+  PLACEHOLDER.style.display = 'none';
+  POKEDETAILS.style.display = 'block';
+  PNAME.textContent = ucfirst(p.name);
+  PNUM.textContent = '#'+pad(p.id);
+  PTYPE.innerHTML = '';
+  p.types.forEach(t=>{
+    const s = document.createElement('span'); s.className='type-badge'; s.textContent = ucfirst(t.type.name);
+    PTYPE.appendChild(s);
+  });
+  const image = p.sprites.other && p.sprites.other['official-artwork'] && p.sprites.other['official-artwork'].front_default ? p.sprites.other['official-artwork'].front_default : p.sprites.front_default;
+  PIMG.src = image;
+  PIMG.alt = p.name;
+  // alt sprites
+  PALTS.innerHTML = '';
+  ['front_default','back_default','front_shiny','back_shiny'].forEach(k=>{
+    if(p.sprites[k]){
+      const i = document.createElement('img'); i.src = p.sprites[k]; i.title = k;
+      PALTS.appendChild(i);
     }
+  });
+  PHEIGHT.textContent = (p.height/10) + ' m';
+  PWEIGHT.textContent = (p.weight/10) + ' kg';
+  PABIL.textContent = p.abilities.map(a=> ucfirst(a.ability.name) + (a.is_hidden? ' (Hidden)':'')).join(', ');
+  // stats
+  STATS.innerHTML = '';
+  p.stats.forEach(s=>{
+    const row = document.createElement('div'); row.className='stat';
+    const label = document.createElement('div'); label.textContent = ucfirst(s.stat.name);
+    const bar = document.createElement('div'); bar.className='bar';
+    const fill = document.createElement('div'); fill.className='fill';
+    const val = Math.min(100, Math.round(s.base_stat));
+    fill.style.width = val + '%';
+    const color = typeGrad[p.types[0].type.name] || typeGrad['normal'];
+    fill.style.background = color;
+    bar.appendChild(fill);
+    row.appendChild(label);
+    row.appendChild(bar);
+    STATS.appendChild(row);
+  });
 
-    let current = chain;
-    while (current) {
-      await addEvolution(current.species.name);
-      current = current.evolves_to[0];
+  // evolution chain
+  await renderEvolution(p);
+  // auto play?
+  if(AUTOCRY.checked) playCryFor(p);
+}
+
+async function renderEvolution(p){
+  EVODIV.innerHTML = 'Loading...';
+  try{
+    const species = await fetch(p.species.url).then(r=>r.json());
+    const evoUrl = species.evolution_chain && species.evolution_chain.url;
+    if(!evoUrl){ EVODIV.innerHTML = 'None'; return; }
+    const evoData = await fetch(evoUrl).then(r=>r.json());
+    EVODIV.innerHTML = '';
+    // Walk first evolution path (keeps it simple & linear)
+    let cur = evoData.chain;
+    while(cur){
+      const nm = cur.species.name;
+      // fetch sprite for that species
+      const pd = await fetch('https://pokeapi.co/api/v2/pokemon/'+nm).then(r=>r.json());
+      const img = pd.sprites.front_default || (pd.sprites.other && pd.sprites.other['official-artwork'] && pd.sprites.other['official-artwork'].front_default) || '';
+      const card = document.createElement('div'); card.className='evo-card';
+      card.innerHTML = `<img src="${img}" alt="${nm}" onerror="this.style.opacity=.4"><div style="font-weight:700">${ucfirst(nm)}</div>`;
+      card.onclick = ()=> selectPokemon(pd);
+      EVODIV.appendChild(card);
+      // jump to first evolves_to (simple linear)
+      if(cur.evolves_to && cur.evolves_to[0]) cur = cur.evolves_to[0];
+      else break;
     }
+  }catch(e){
+    console.error(e);
+    EVODIV.innerHTML = 'No data';
   }
+}
 
-  fetchPokemonList();
+// audio: try Pokemon Showdown cries, else fallback synth beep
+function playCryFor(p){
+  const name = p.name.replace(/\W/g,'').toLowerCase();
+  const url = `https://play.pokemonshowdown.com/audio/cries/${name}.mp3`;
+  const a = new Audio(url);
+  a.play().catch(()=> synthBeep());
+}
+PLAYCRY.addEventListener('click', ()=> { if(currentPokemon) playCryFor(currentPokemon); });
+
+function synthBeep(){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type='sawtooth';
+    o.frequency.value = 200 + Math.random()*800;
+    g.gain.value = 0.0001;
+    o.connect(g); g.connect(ctx.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.5);
+    o.stop(ctx.currentTime + 0.6);
+  }catch(e){ console.warn('Audio not supported', e) }
+}
+
+// theme toggle (light/dark)
+let dark = true;
+THEMEBTN.addEventListener('click', ()=>{
+  dark = !dark;
+  if(!dark){
+    document.documentElement.style.setProperty('--bg','#f7fafc');
+    document.documentElement.style.setProperty('--panel','#ffffff');
+    document.documentElement.style.setProperty('--muted','#6b7280');
+    THEMEBTN.textContent = '☀️';
+  } else {
+    document.documentElement.style.setProperty('--bg','#07102b');
+    document.documentElement.style.setProperty('--panel','#0b1220');
+    document.documentElement.style.setProperty('--muted','#9aa4b2');
+    THEMEBTN.textContent = '🌙';
+  }
+});
+
+// search + load
+SEARCH.addEventListener('input', ()=> renderGrid());
+LOADBTN.addEventListener('click', ()=> { if(allPokemon.length===151){ STATUS.textContent='Already loaded'; } else loadFirst151(); });
+
+// close panel (mobile)
+CLOSEPANEL.addEventListener('click', ()=> {
+  DETAIL.classList.remove('open');
+  CLOSEPANEL.style.display = 'none';
+});
+
+// allow escape key to close on mobile
+document.addEventListener('keydown', (e)=> { if(e.key==='Escape'){ DETAIL.classList.remove('open'); CLOSEPANEL.style.display='none'; } });
+
+// initialize minimal (do not auto-load until user clicks)
+STATUS.textContent = 'Click "Load 151" to fetch first 151 Pokémon.';
+
+// optional: auto-load (uncomment to auto load)
+// loadFirst151();
 </script>
 </body>
 </html>
